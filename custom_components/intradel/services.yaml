@@ -5,3 +5,5 @@ set_cookie:
       example: "PHPSESSID=51d387hn8t7mvi4okdnm7tmrm5"
       selector:
         text:
+
+show_bookmarklet:

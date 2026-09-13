@@ -12,6 +12,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     CONF_COOKIE,
     CONF_KEEPALIVE_INTERVAL,
+    CONF_WEBHOOK_ID,
     DEFAULT_KEEPALIVE_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     PLATFORMS,
@@ -19,12 +20,20 @@ from .const import (
 from .coordinator import IntradelConfigEntry, IntradelCoordinator
 from .keepalive import ping_session
 from .services import async_setup_services, async_unload_services
+from .webhook import async_setup_webhook, async_unload_webhook, async_webhook_id
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IntradelConfigEntry) -> bool:
     """Set up intradel from a config entry."""
+    if CONF_WEBHOOK_ID not in entry.data:
+        # Done before the update listener is added, so giving the entry its
+        # webhook id does not trigger a reload of the setup in progress.
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_WEBHOOK_ID: async_webhook_id(entry)}
+        )
+
     scan_interval = timedelta(minutes=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
     coordinator = IntradelCoordinator(hass, entry, scan_interval)
     await coordinator.async_config_entry_first_refresh()
@@ -34,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IntradelConfigEntry) -> 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     _async_setup_keepalive(hass, entry, coordinator)
     async_setup_services(hass, entry)
+    async_setup_webhook(hass, entry)
 
     return True
 
@@ -70,4 +80,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: IntradelConfigEntry) ->
     """Unload a config entry."""
     # The coordinator's aiohttp session is auto-detached by HA on unload.
     async_unload_services(hass)
+    async_unload_webhook(hass, entry)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

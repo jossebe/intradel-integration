@@ -50,3 +50,8 @@ ATTR_CHIP = "chip"
 # Service letting a browser hand over a freshly captured session cookie.
 SERVICE_SET_COOKIE = "set_cookie"
 ATTR_COOKIE = "cookie"
+
+# Webhook the browser bookmarklet posts a fresh cookie to. Stored per entry so
+# the URL stays stable across restarts.
+CONF_WEBHOOK_ID = "webhook_id"
+SERVICE_SHOW_BOOKMARKLET = "show_bookmarklet"

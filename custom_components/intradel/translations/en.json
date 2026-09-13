@@ -3,14 +3,14 @@
     "step": {
       "user": {
         "title": "Session cookie for Intradel",
-        "description": "The Intradel login form is protected by a reCAPTCHA that the site verifies server-side, so a username and password cannot be used here. Log in at {intradel_url} in a regular browser, then paste the session cookie below, including its name: PHPSESSID=... (the whole \"Cookie\" request header works too).",
+        "description": "Home Assistant needs the **session cookie** from your browser: the Intradel login form is behind a reCAPTCHA that the site checks server-side, so a username and password cannot work here.\n\n1. Log in at {intradel_url} and check that your data is displayed.\n2. Press `F12` to open the developer tools, go to the **Network** tab, then reload with `F5`.\n3. Click the `data.php` request, and find **Cookie** under **Request headers**.\n4. Copy its value and paste it below.\n\n**Keep the cookie's name.** Paste `PHPSESSID=abc123`, not `abc123` on its own: a cookie is a `name=value` pair, and a bare value sends no session at all.\n\n*Tip: call the `intradel.show_bookmarklet` service to get a bookmark that does all of this in one click, next time.*",
         "data": {
           "cookie": "Session cookie (PHPSESSID=...)"
         }
       },
       "reauth_confirm": {
         "title": "Re-authenticate with Intradel",
-        "description": "The stored session cookie is no longer valid. Log in again at {intradel_url} in a regular browser and paste a fresh one, including its name: PHPSESSID=...",
+        "description": "The stored session cookie is no longer valid.\n\nLog in again at {intradel_url}, then copy the **Cookie** request header of the `data.php` request (`F12` → **Network** → `F5`) and paste it below.\n\n**Keep the cookie's name**: `PHPSESSID=abc123`, not `abc123` on its own.\n\n*Tip: the `intradel.show_bookmarklet` service gives you a one-click bookmark instead.*",
         "data": {
           "cookie": "Session cookie (PHPSESSID=...)"
         }
@@ -61,6 +61,10 @@
           "description": "The value of the Cookie request header, e.g. PHPSESSID=..."
         }
       }
+    },
+    "show_bookmarklet": {
+      "name": "Show the one-click bookmarklet",
+      "description": "Shows a notification with a bookmark that sends the browser's Intradel cookie to Home Assistant in one click."
     }
   },
   "entity": {

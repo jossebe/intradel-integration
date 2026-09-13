@@ -3,14 +3,14 @@
     "step": {
       "user": {
         "title": "Cookie de session pour Intradel",
-        "description": "Le formulaire de connexion Intradel est protégé par un reCAPTCHA vérifié côté serveur : un identifiant et un mot de passe ne peuvent donc pas être utilisés ici. Connectez-vous sur {intradel_url} dans un navigateur classique, puis collez le cookie de session ci-dessous, **avec son nom** : PHPSESSID=... (l'en-tête « Cookie » complet fonctionne aussi).",
+        "description": "Home Assistant a besoin du **cookie de session** de votre navigateur : le formulaire de connexion Intradel est protégé par un reCAPTCHA vérifié côté serveur, un identifiant et un mot de passe ne peuvent donc pas fonctionner ici.\n\n1. Connectez-vous sur {intradel_url} et vérifiez que vos données s'affichent.\n2. Appuyez sur `F12` pour ouvrir les outils de développement, onglet **Réseau**, puis rechargez avec `F5`.\n3. Cliquez sur la requête `data.php`, et trouvez **Cookie** dans les **en-têtes de requête**.\n4. Copiez sa valeur et collez-la ci-dessous.\n\n**Gardez le nom du cookie.** Collez `PHPSESSID=abc123`, et non `abc123` seul : un cookie est une paire `nom=valeur`, une valeur nue n'envoie aucune session.\n\n*Astuce : appelez le service `intradel.show_bookmarklet` pour obtenir un favori qui fait tout cela en un clic, la prochaine fois.*",
         "data": {
           "cookie": "Cookie de session (PHPSESSID=...)"
         }
       },
       "reauth_confirm": {
         "title": "Ré-authentification Intradel",
-        "description": "Le cookie de session enregistré n'est plus valide. Reconnectez-vous sur {intradel_url} et collez-en un nouveau, avec son nom : PHPSESSID=...",
+        "description": "Le cookie de session enregistré n'est plus valide.\n\nReconnectez-vous sur {intradel_url}, puis copiez l'en-tête de requête **Cookie** de la requête `data.php` (`F12` → **Réseau** → `F5`) et collez-le ci-dessous.\n\n**Gardez le nom du cookie** : `PHPSESSID=abc123`, et non `abc123` seul.\n\n*Astuce : le service `intradel.show_bookmarklet` vous donne un favori en un clic.*",
         "data": {
           "cookie": "Cookie de session (PHPSESSID=...)"
         }
@@ -61,6 +61,10 @@
           "description": "La valeur de l'en-tête de requête Cookie, par ex. PHPSESSID=..."
         }
       }
+    },
+    "show_bookmarklet": {
+      "name": "Afficher le favori en un clic",
+      "description": "Affiche une notification contenant un favori qui envoie le cookie Intradel du navigateur à Home Assistant en un clic."
     }
   },
   "entity": {

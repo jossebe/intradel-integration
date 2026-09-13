@@ -1,75 +1,66 @@
 # Refreshing the session cookie in one click
 
-The Intradel login form is protected by a server-verified invisible reCAPTCHA, so
-an automated login/password request is always rejected. A session cookie captured
-from a browser that is already logged in is the only usable credential.
+The Intradel login form is protected by a reCAPTCHA that the site verifies
+server-side, so an automated login/password request is always rejected. A session
+cookie captured from a browser that is already logged in is the only usable
+credential.
 
 You still log in on the Intradel website yourself, in your own browser. Only the
-resulting session is handed over to Home Assistant, by the `intradel.set_cookie`
-service, so you never have to open the network inspector again.
+resulting session is handed over to Home Assistant.
 
-## 1. Allow your browser to call Home Assistant
+## Why the browser has to do it
 
-The bookmarklet runs on `www.intradel.be` and calls Home Assistant, which is a
-cross-origin request. Add this to `configuration.yaml` and restart:
+Home Assistant cannot fetch the cookie itself:
 
-```yaml
-http:
-  cors_allowed_origins:
-    - https://www.intradel.be
-```
+- the site sends `X-Frame-Options: SAMEORIGIN`, so it cannot be embedded in a
+  Home Assistant page at all;
+- and even if it could, the same-origin policy forbids reading another domain's
+  cookies from JavaScript. That rule is what stops any website from stealing your
+  sessions, so there is no way around it.
 
-## 2. Create a long-lived access token
+So the page hands the cookie over itself, which a bookmarklet does in one click.
 
-In Home Assistant, open your profile, go to **Security**, and create a
-**long-lived access token**.
+## Setting it up
 
-> The token is stored in the bookmark itself, in clear text. Anyone with access to
-> your browser profile can read it and use it against your Home Assistant. Treat it
-> as a password: use a dedicated Home Assistant user with only the permissions it
-> needs, and delete the token when you stop using the bookmarklet.
+Call the `intradel.show_bookmarklet` service (Developer tools → Actions). A
+notification appears with a ready-to-use bookmark, already pointing at your own
+Home Assistant. Drag it to your bookmarks bar, or create a bookmark with it as
+the URL.
 
-## 3. Create the bookmark
+Then: log in at <https://www.intradel.be/particulier/>, check that your data is
+shown, and click the bookmark.
 
-Create a new bookmark whose URL is the code below, after replacing `HA_URL` and
-`HA_TOKEN` with your own values.
+Home Assistant validates the cookie against the site before storing it, so a
+stale one is refused rather than saved.
 
-```js
-javascript:(async () => {
-  const HA_URL = "http://homeassistant.local:8123";
-  const HA_TOKEN = "paste-your-long-lived-token-here";
-  const cookie = document.cookie;
-  if (!cookie.includes("PHPSESSID")) {
-    alert("No Intradel session found. Log in first, then click again.");
-    return;
-  }
-  try {
-    const res = await fetch(`${HA_URL}/api/services/intradel/set_cookie`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${HA_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ cookie }),
-    });
-    alert(res.ok ? "Cookie sent to Home Assistant." : `Failed: HTTP ${res.status}`);
-  } catch (err) {
-    alert(`Failed to reach Home Assistant: ${err}`);
-  }
-})();
-```
+## What it does, and does not, expose
 
-## 4. Use it
+The bookmark posts to a **webhook**, not to the REST API. That means:
 
-Log in at <https://www.intradel.be/particulier/>, then click the bookmark. Home
-Assistant validates the cookie against the site before storing it, and reloads the
-integration. A cookie the site already rejects is refused with an explicit error
-rather than being saved.
+- **no access token** sits in your bookmarks — the earlier version of this
+  document required a long-lived token, which was a password in plain text;
+- **no CORS configuration**: a POST of plain text is a "simple request", so the
+  browser sends it without a preflight and `configuration.yaml` needs no
+  `cors_allowed_origins` entry;
+- the webhook is **local-only**, so it cannot be reached from the internet;
+- the only thing it can do is replace the Intradel session cookie.
+
+## Doing it by hand instead
+
+1. Log in at <https://www.intradel.be/particulier/>.
+2. Press `F12`, open the **Network** tab, reload with `F5`.
+3. Click the `data.php` request and find **Cookie** under **Request headers**.
+4. Copy its value into the integration's `Session cookie` field.
+
+**Keep the cookie's name**: paste `PHPSESSID=abc123`, not `abc123` on its own. A
+cookie is a `name=value` pair, so a bare value sends no session and the site
+answers as if the credentials were wrong. (The integration now repairs this for
+you, but the full value is what the site actually expects.)
 
 ## How often will you need this?
 
-Rarely. The session cookie carries no expiry of its own: it dies when the server
-garbage-collects an inactive PHP session. The integration pings the site every
-15 minutes (`keepalive_interval`, set it to 0 to disable) precisely so the session
-stays alive. You should only need the bookmarklet after a long Home Assistant
-outage, or if Intradel invalidates the session on its side.
+Rarely. The cookie carries no expiry of its own: it dies when the server garbage
+collects an inactive PHP session. The integration pings the site every 15 minutes
+(`keepalive_interval`, set it to 0 to disable) precisely so the session stays
+alive. You should only need this after a long Home Assistant outage, or if
+Intradel invalidates the session on its side.

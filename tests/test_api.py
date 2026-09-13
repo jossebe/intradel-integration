@@ -127,3 +127,11 @@ async def test_get_data_sends_a_named_cookie() -> None:
     assert session.get.call_args.kwargs["headers"] == {
         "Cookie": "PHPSESSID=k5mmgp8filf8bq0th1pmkuiir3"
     }
+
+
+def test_normalize_cookie_keeps_the_whole_browser_header() -> None:
+    """The analytics cookies are harmless and are passed through untouched."""
+    header = "_ga_X=GS2.1; _ga=GA1.2.17; PHPSESSID=k5mm; _gid=GA1.2.21"
+
+    assert normalize_cookie(header) == header
+    assert "PHPSESSID=k5mm" in normalize_cookie(header)
