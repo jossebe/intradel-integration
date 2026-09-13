@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -23,6 +23,8 @@ from custom_components.intradel.const import (
     CONF_PRICE_RESIDUAL_KG,
     CONF_QUOTA_ORGANIC_KG,
     CONF_QUOTA_RESIDUAL_KG,
+    CONF_TOWN,
+    CONF_WEBHOOK_ID,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -143,7 +145,7 @@ async def test_reauth_flow_invalid_auth(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
-    assert mock_config_entry.data == COOKIE_INPUT
+    assert mock_config_entry.data[CONF_COOKIE] == COOKIE_INPUT[CONF_COOKIE]
 
 
 async def test_reauth_replaces_legacy_credentials(
@@ -162,8 +164,15 @@ async def test_reauth_replaces_legacy_credentials(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
-    # A full replace, so nothing of the old credentials survives.
-    assert mock_legacy_config_entry.data == COOKIE_INPUT
+    # A full replace, so nothing of the old credentials survives. The entry may
+    # also carry a webhook id, which the reload assigns and which is not a
+    # credential, so the assertion names what must be gone instead of pinning
+    # the whole mapping.
+    data = mock_legacy_config_entry.data
+    assert data[CONF_COOKIE] == COOKIE_INPUT[CONF_COOKIE]
+    assert CONF_USERNAME not in data
+    assert CONF_PASSWORD not in data
+    assert CONF_TOWN not in data
 
 
 async def test_options_flow(
@@ -207,3 +216,33 @@ async def test_options_flow_defaults(
     schema = result["data_schema"]({})
 
     assert schema[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
+
+
+async def test_reauth_keeps_the_webhook_id(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_get_data: AsyncMock
+) -> None:
+    """The bookmarklet the user saved must keep working after a reauth.
+
+    Re-authentication replaces the entry data wholesale, so the webhook id has
+    to be carried over explicitly; otherwise the saved bookmark would silently
+    start posting to a URL that no longer exists.
+    """
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, CONF_WEBHOOK_ID: "abcdef"}
+    )
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    with patch(
+        "custom_components.intradel.config_flow.get_data",
+        new_callable=AsyncMock,
+        return_value=SAMPLE_DATA,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_COOKIE: "PHPSESSID=fresh"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert mock_config_entry.data[CONF_WEBHOOK_ID] == "abcdef"
+    assert mock_config_entry.data[CONF_COOKIE] == "PHPSESSID=fresh"
