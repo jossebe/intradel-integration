@@ -1,7 +1,9 @@
 # Pulls in a matching Home Assistant + pytest plugins for testing custom components.
 pytest-homeassistant-custom-component
 # Runtime dependency of the integration (declared in manifest.json).
-pyintradel==0.0.7
+# Pinned to the version Home Assistant ships, which is what the integration
+# runs against in production.
+beautifulsoup4>=4.13
 # Lint and type checking.
 ruff>=0.15
 mypy>=2.1

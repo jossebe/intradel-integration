@@ -10,11 +10,11 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/jossebe/intradel-integration/issues",
   "loggers": [
-    "pyintradel"
+    "custom_components.intradel"
   ],
   "requirements": [
-    "pyintradel==0.0.7"
+    "beautifulsoup4>=4.13"
   ],
   "single_config_entry": true,
-  "version": "0.1.0"
+  "version": "0.1.1"
 }

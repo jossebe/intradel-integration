@@ -18,7 +18,7 @@ COOKIE_INPUT = {
     CONF_COOKIE: "PHPSESSID=abc123",
 }
 
-# Shape mirrors what pyintradel.api.get_data returns (list of bin/recypark dicts).
+# Shape mirrors what api.get_data returns (list of bin/recypark dicts).
 SAMPLE_DATA: list[dict[str, Any]] = [
     {
         "name": "ORGANIQUE",

@@ -13,8 +13,8 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
-from pyintradel.api import get_data
 
+from .api import get_data
 from .const import (
     CONF_ANNUAL_FEE,
     CONF_COOKIE,
@@ -105,11 +105,10 @@ class IntradelCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
                 "Intradel now requires a session cookie; please re-authenticate"
             )
         try:
-            # pyintradel types its return as list[Any]; narrow it for consumers.
             data: list[dict[str, Any]] = await get_data(self._session, cookie=cookie)
         except ValueError as err:
             message = str(err.args[0]) if err.args else str(err)
-            # pyintradel signals bad credentials (or a rejected/expired cookie)
+            # The scraper signals a rejected or expired cookie
             # with this specific message; anything else is an unexpected-markup
             # / transient scraping error.
             if "login/password" in message:

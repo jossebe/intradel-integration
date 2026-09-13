@@ -1,6 +1,6 @@
-"""Typed domain model for the data scraped by pyintradel.
+"""Typed domain model for the scraped Intradel data.
 
-pyintradel returns untyped ``list[dict[str, Any]]`` straight from the HTML
+The scraper returns untyped ``list[dict[str, Any]]`` straight from the HTML
 scraping, with every value as a string (dates as ``DD-MM-YYYY``, weights and
 totals as decimal strings, recypark contents as free text). Business logic on
 top of that is unmaintainable, so this module is the single place where the
@@ -263,7 +263,7 @@ def _parse_recyparc(card: Mapping[str, Any], start_date: date) -> RecyparcAccoun
 
 
 def parse_account(payload: Any, *, default_year: int | None = None) -> Account:
-    """Turn a raw pyintradel payload into a typed Account.
+    """Turn a raw scraped payload into a typed Account.
 
     ``default_year`` is used when no card carries a usable start date; pass the
     current year so an empty or malformed payload still yields a usable object.

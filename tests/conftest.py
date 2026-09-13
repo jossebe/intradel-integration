@@ -62,7 +62,7 @@ def mock_legacy_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_get_data() -> Generator[AsyncMock]:
-    """Patch the coordinator's call to pyintradel so no network access happens."""
+    """Patch the coordinator's fetch so no network access happens."""
     with patch(
         "custom_components.intradel.coordinator.get_data",
         new_callable=AsyncMock,

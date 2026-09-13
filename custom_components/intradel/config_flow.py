@@ -25,8 +25,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from pyintradel.api import get_data
 
+from .api import get_data
 from .const import (
     CONF_ANNUAL_FEE,
     CONF_COOKIE,
