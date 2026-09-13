@@ -1,8 +1,10 @@
 """Test the vendored Intradel scraper."""
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 
-from custom_components.intradel.api import parse
+from custom_components.intradel.api import get_data, normalize_cookie, parse
 
 # One bin card and one recypark card, with the column layout the site really
 # uses: Date | Vidanges | Kilos for a bin, Date | Parc | Matiere for a recypark.
@@ -79,3 +81,49 @@ def test_login_page_is_reported_as_an_auth_error() -> None:
 def test_empty_page() -> None:
     """A page with no card at all parses to an empty list."""
     assert parse("<html><body></body></html>") == []
+
+
+@pytest.mark.parametrize(
+    ("pasted", "expected"),
+    [
+        # The bare session id: a cookie needs a name, so this sends nothing and
+        # the site answers with its login page.
+        ("k5mmgp8filf8bq0th1pmkuiir3", "PHPSESSID=k5mmgp8filf8bq0th1pmkuiir3"),
+        # Already correct.
+        ("PHPSESSID=abc123", "PHPSESSID=abc123"),
+        # The whole request header, copied with its name.
+        ("Cookie: PHPSESSID=abc123", "PHPSESSID=abc123"),
+        ("cookie:PHPSESSID=abc123", "PHPSESSID=abc123"),
+        # The header name plus a bare id.
+        ("Cookie: abc123", "PHPSESSID=abc123"),
+        # Several cookies, as the browser sends them.
+        (
+            "_ga=GA1.2.17; PHPSESSID=abc123; _gid=GA1.2.21",
+            "_ga=GA1.2.17; PHPSESSID=abc123; _gid=GA1.2.21",
+        ),
+        # Stray whitespace from the copy.
+        ("  PHPSESSID=abc123  ", "PHPSESSID=abc123"),
+        ("  abc123\n", "PHPSESSID=abc123"),
+    ],
+)
+def test_normalize_cookie(pasted: str, expected: str) -> None:
+    """Whatever the user pastes ends up as a usable Cookie header."""
+    assert normalize_cookie(pasted) == expected
+
+
+async def test_get_data_sends_a_named_cookie() -> None:
+    """A bare session id is named before it reaches the site."""
+    session = MagicMock()
+    response = MagicMock()
+    response.status = 200
+    response.text = AsyncMock(return_value=PAGE)
+    context = MagicMock()
+    context.__aenter__ = AsyncMock(return_value=response)
+    context.__aexit__ = AsyncMock(return_value=False)
+    session.get = MagicMock(return_value=context)
+
+    await get_data(session, "k5mmgp8filf8bq0th1pmkuiir3")
+
+    assert session.get.call_args.kwargs["headers"] == {
+        "Cookie": "PHPSESSID=k5mmgp8filf8bq0th1pmkuiir3"
+    }

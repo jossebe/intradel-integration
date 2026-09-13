@@ -3,22 +3,22 @@
     "step": {
       "user": {
         "title": "Cookie de session pour Intradel",
-        "description": "Le formulaire de connexion Intradel est protégé par un reCAPTCHA vérifié côté serveur : un identifiant et un mot de passe ne peuvent donc pas être utilisés ici. Connectez-vous sur {intradel_url} dans un navigateur classique, puis copiez la valeur de l'en-tête de requête « Cookie » et collez-la ci-dessous.",
+        "description": "Le formulaire de connexion Intradel est protégé par un reCAPTCHA vérifié côté serveur : un identifiant et un mot de passe ne peuvent donc pas être utilisés ici. Connectez-vous sur {intradel_url} dans un navigateur classique, puis collez le cookie de session ci-dessous, **avec son nom** : PHPSESSID=... (l'en-tête « Cookie » complet fonctionne aussi).",
         "data": {
-          "cookie": "Cookie de session"
+          "cookie": "Cookie de session (PHPSESSID=...)"
         }
       },
       "reauth_confirm": {
         "title": "Ré-authentification Intradel",
-        "description": "Le cookie de session enregistré n'est plus valide. Reconnectez-vous sur {intradel_url} dans un navigateur classique et collez un nouveau cookie.",
+        "description": "Le cookie de session enregistré n'est plus valide. Reconnectez-vous sur {intradel_url} et collez-en un nouveau, avec son nom : PHPSESSID=...",
         "data": {
-          "cookie": "Cookie de session"
+          "cookie": "Cookie de session (PHPSESSID=...)"
         }
       }
     },
     "error": {
       "cannot_connect": "Impossible de se connecter",
-      "invalid_auth": "Identifiants incorrects",
+      "invalid_auth": "Intradel a rejeté ce cookie. Vérifiez que vous l'avez copié après vous être connecté, et qu'il comporte son nom, par ex. PHPSESSID=abc123.",
       "unknown": "Erreur inattendue"
     },
     "abort": {

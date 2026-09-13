@@ -34,7 +34,9 @@ one-click bookmarklet hand over a fresh cookie without opening the developer too
    ![Where to find the Cookie request header in the browser's network inspector](docs/images/cookie-devtools.png)
 
 5. Copy the full value of that header and paste it in the `Session cookie` field of the
-   integration configuration.
+   integration configuration. **Keep the cookie's name**: paste `PHPSESSID=abc123`, not
+   `abc123` on its own -- a cookie is a `name=value` pair, so a bare value sends no
+   session at all and the site answers as if the credentials were wrong.
 
 The cookie is a session token: if it expires, the integration will ask you to repeat these
 steps to provide a fresh one.

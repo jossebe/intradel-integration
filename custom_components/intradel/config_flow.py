@@ -26,7 +26,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import get_data
+from .api import get_data, normalize_cookie
 from .const import (
     CONF_ANNUAL_FEE,
     CONF_COOKIE,
@@ -104,7 +104,7 @@ class IntradelConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                data = {CONF_COOKIE: user_input[CONF_COOKIE]}
+                data = {CONF_COOKIE: normalize_cookie(user_input[CONF_COOKIE])}
                 if self.source == "reauth":
                     # Full replace, not data_updates: drops the leftover
                     # login/password/town of an entry created before the

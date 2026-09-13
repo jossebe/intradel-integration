@@ -25,14 +25,36 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_URL = "https://www.intradel.be/particulier/data.php"
 
+# The cookie that actually carries the session; the rest is analytics.
+SESSION_COOKIE = "PHPSESSID"
+
 # Raised with this wording when the site serves its login page instead of the
 # data: the coordinator turns it into a re-authentication request.
 AUTH_ERROR = "Wrong response received, login/password seems incorrect"
 
 
+def normalize_cookie(cookie: str) -> str:
+    """Accept the shapes a user may realistically paste.
+
+    A cookie is a ``name=value`` pair, so pasting the session id on its own
+    sends no cookie at all: the site then serves its login page, which the
+    parser reports as wrong credentials -- a misleading error that is
+    impossible to diagnose from the UI. Copying the whole request header,
+    ``Cookie:`` prefix included, fails the same way.
+
+    So: strip a leading header name, and name a bare id ``PHPSESSID``.
+    """
+    value = cookie.strip()
+    if value.lower().startswith("cookie:"):
+        value = value.split(":", 1)[1].strip()
+    if "=" not in value:
+        value = f"{SESSION_COOKIE}={value}"
+    return value
+
+
 async def get_data(session: aiohttp.ClientSession, cookie: str) -> list[dict[str, Any]]:
     """Fetch the waste collection data using a browser session cookie."""
-    async with session.get(DATA_URL, headers={"Cookie": cookie}) as resp:
+    async with session.get(DATA_URL, headers={"Cookie": normalize_cookie(cookie)}) as resp:
         if resp.status != 200:
             raise ValueError(f"Received error {resp.status}", await resp.text())
         return parse(await resp.text())

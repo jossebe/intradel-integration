@@ -22,6 +22,8 @@ from datetime import timedelta
 
 import aiohttp
 
+from .api import normalize_cookie
+
 _LOGGER = logging.getLogger(__name__)
 
 DATA_URL = "https://www.intradel.be/particulier/data.php"
@@ -59,7 +61,7 @@ async def ping_session(session: aiohttp.ClientSession, cookie: str) -> bool:
     clear_site_cookies(session)
     try:
         async with session.head(
-            DATA_URL, headers={"Cookie": cookie}, allow_redirects=False
+            DATA_URL, headers={"Cookie": normalize_cookie(cookie)}, allow_redirects=False
         ) as resp:
             if resp.status == 200:
                 return True
