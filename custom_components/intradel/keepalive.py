@@ -26,10 +26,26 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_URL = "https://www.intradel.be/particulier/data.php"
 
+# Cookies for this domain must never be reused from a session's jar.
+COOKIE_DOMAIN = "intradel.be"
+
 # Comfortably below PHP's 24-minute default session.gc_maxlifetime. The site
 # does not advertise its own value, so this errs on the safe side; a ping costs
 # no payload at all.
 DEFAULT_KEEPALIVE_INTERVAL = timedelta(minutes=15)
+
+
+def clear_site_cookies(session: aiohttp.ClientSession) -> None:
+    """Drop any stored Intradel cookie so an explicit Cookie header wins.
+
+    aiohttp merges the session's cookie jar into every request, and a jar cookie
+    *overrides* a header of the same name instead of losing to it. A PHPSESSID
+    left in the jar by an earlier response therefore silently replaces the one
+    the user just captured, and the site answers with its login page -- which
+    reads as "wrong credentials" even though the cookie was perfectly valid.
+    Only this site's cookies are dropped, so a shared session is left intact.
+    """
+    session.cookie_jar.clear_domain(COOKIE_DOMAIN)
 
 
 async def ping_session(session: aiohttp.ClientSession, cookie: str) -> bool:
@@ -40,6 +56,7 @@ async def ping_session(session: aiohttp.ClientSession, cookie: str) -> bool:
     trigger a spurious re-authentication; a genuinely dead session is caught by
     the next real poll anyway.
     """
+    clear_site_cookies(session)
     try:
         async with session.head(
             DATA_URL, headers={"Cookie": cookie}, allow_redirects=False

@@ -48,6 +48,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
+from .keepalive import clear_site_cookies
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,8 +61,13 @@ async def validate_authentication(hass: HomeAssistant, cookie: str) -> None:
     """Ensure the provided session cookie is working."""
     # One-shot validation: the shared HA session is the documented tool here; the
     # actual polling uses the coordinator's own isolated session.
+    session = async_get_clientsession(hass)
+    # Without this, a PHPSESSID left in the shared jar by an earlier attempt
+    # overrides the cookie being validated, so every re-authentication after the
+    # first one fails with "invalid credentials" on a perfectly good cookie.
+    clear_site_cookies(session)
     try:
-        if not await get_data(async_get_clientsession(hass), cookie=cookie):
+        if not await get_data(session, cookie=cookie):
             raise InvalidAuth
     except ValueError as err:
         _LOGGER.error("Unable to authenticate: %s", err)
