@@ -68,5 +68,7 @@ def async_setup_webhook(hass: HomeAssistant, entry: IntradelConfigEntry) -> None
 
 
 def async_unload_webhook(hass: HomeAssistant, entry: IntradelConfigEntry) -> None:
-    """Remove the webhook."""
-    webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+    """Remove the webhook, if this entry ever registered one."""
+    webhook_id = entry.data.get(CONF_WEBHOOK_ID)
+    if webhook_id:
+        webhook.async_unregister(hass, webhook_id)

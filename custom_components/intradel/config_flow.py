@@ -37,6 +37,7 @@ from .const import (
     CONF_PRICE_RESIDUAL_KG,
     CONF_QUOTA_ORGANIC_KG,
     CONF_QUOTA_RESIDUAL_KG,
+    CONF_WEBHOOK_ID,
     DEFAULT_ANNUAL_FEE,
     DEFAULT_HOUSEHOLD_SIZE,
     DEFAULT_KEEPALIVE_INTERVAL,
@@ -108,8 +109,14 @@ class IntradelConfigFlow(ConfigFlow, domain=DOMAIN):
                 if self.source == "reauth":
                     # Full replace, not data_updates: drops the leftover
                     # login/password/town of an entry created before the
-                    # login/password method was removed.
-                    return self.async_update_reload_and_abort(self._get_reauth_entry(), data=data)
+                    # login/password method was removed. The webhook id is
+                    # carried over on purpose, so the bookmarklet the user
+                    # already saved keeps working.
+                    reauth_entry = self._get_reauth_entry()
+                    webhook_id = reauth_entry.data.get(CONF_WEBHOOK_ID)
+                    if webhook_id:
+                        data[CONF_WEBHOOK_ID] = webhook_id
+                    return self.async_update_reload_and_abort(reauth_entry, data=data)
                 return self.async_create_entry(title="Intradel", data=data)
 
         return self.async_show_form(

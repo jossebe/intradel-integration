@@ -1,17 +1,20 @@
 {
-  "domain": "intradel",
-  "name": "Intradel",
   "codeowners": [
     "@jossebe"
   ],
   "config_flow": true,
+  "dependencies": [
+    "webhook"
+  ],
   "documentation": "https://github.com/jossebe/intradel-integration",
+  "domain": "intradel",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/jossebe/intradel-integration/issues",
   "loggers": [
     "custom_components.intradel"
   ],
+  "name": "Intradel",
   "requirements": [
     "beautifulsoup4>=4.13"
   ],

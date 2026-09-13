@@ -8,13 +8,15 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_COOKIE
+from .const import CONF_COOKIE, CONF_WEBHOOK_ID
 from .coordinator import IntradelConfigEntry
 
+# The webhook id is a capability URL: anyone on the network who knows it can
+# replace the cookie, so it is redacted like a credential.
 # The cookie is a live session token and the only credential the integration
 # still uses; username and password are redacted too because entries created
 # before the login/password method was removed may still carry them.
-TO_REDACT_ENTRY = {CONF_USERNAME, CONF_PASSWORD, CONF_COOKIE}
+TO_REDACT_ENTRY = {CONF_USERNAME, CONF_PASSWORD, CONF_COOKIE, CONF_WEBHOOK_ID}
 TO_REDACT_DATA = {"id"}
 
 
